@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalvi AI — Tamil to English Teacher</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F4EF;
+  --surface:#FFFFFF;
+  --surface2:#F0EDE8;
+  --border:#E2DDD6;
+  --accent:#FF6B35;
+  --accent2:#FFB347;
+  --accent-dim:#FFF0EB;
+  --green:#22C55E;
+  --green-dim:#DCFCE7;
+  --blue:#3B82F6;
+  --blue-dim:#EFF6FF;
+  --purple:#8B5CF6;
+  --purple-dim:#F5F3FF;
+  --yellow:#F59E0B;
+  --yellow-dim:#FFFBEB;
+  --text:#1C1917;
+  --text2:#78716C;
+  --text3:#A8A29E;
+  --radius:18px;
+  --radius-sm:12px;
+  --shadow:0 4px 24px rgba(0,0,0,0.08);
+}
+
+html,body{height:100%;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text)}
+
+/* ── LANDING ── */
+#landing{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:2rem;text-align:center;
+  background:linear-gradient(160deg,#FFF8F5 0%,#F7F4EF 60%,#EEF2FF 100%);
+}
+.land-emoji{font-size:4rem;margin-bottom:1rem;animation:bounce 2s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.land-title{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;line-height:1.15;margin-bottom:.5rem}
+.land-title span{color:var(--accent)}
+.land-tamil{font-family:'Noto Sans Tamil',sans-serif;font-size:1.1rem;color:var(--text2);margin-bottom:.5rem}
+.land-sub{font-size:1rem;color:var(--text2);max-width:420px;line-height:1.6;margin-bottom:2rem}
+.level-cards{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:2rem}
+.level-card{
+  padding:14px 20px;border-radius:var(--radius-sm);border:2px solid var(--border);
+  background:var(--surface);cursor:pointer;transition:all .2s;text-align:left;min-width:130px;
+}
+.level-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
+.level-card.selected{border-color:var(--accent);background:var(--accent-dim)}
+.level-icon{font-size:1.5rem;margin-bottom:4px}
+.level-name{font-weight:700;font-size:.95rem}
+.level-desc{font-size:.78rem;color:var(--text2);margin-top:2px}
+.cta-row{display:flex;flex-direction:column;align-items:center;gap:10px}
+.cta-btn{
+  padding:14px 40px;background:var(--accent);color:#fff;border:none;
+  border-radius:999px;font-size:1rem;font-weight:700;font-family:'Nunito',sans-serif;
+  cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(255,107,53,.3)
+}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,107,53,.4)}
+.api-note{font-size:.78rem;color:var(--text3)}
+.api-note a{color:var(--accent);text-decoration:none;font-weight:700}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;
+  align-items:center;justify-content:center;z-index:200;padding:1rem;
+  backdrop-filter:blur(4px)
+}
+.modal{
+  background:var(--surface);border-radius:var(--radius);padding:2rem;
+  max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.15);
+  max-height:90vh;overflow-y:auto;
+}
+.modal h3{font-size:1.3rem;font-weight:800;margin-bottom:.4rem}
+.modal p{font-size:.88rem;color:var(--text2);line-height:1.6;margin-bottom:1rem}
+
+.setup-steps{margin-bottom:1rem}
+.setup-step{
+  display:flex;gap:10px;align-items:flex-start;margin-bottom:.65rem;
+  padding:10px 12px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);
+}
+.step-num{
+  min-width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;
+  font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.step-text{font-size:.83rem;color:var(--text);line-height:1.5}
+.step-text a{color:var(--blue);text-decoration:none;font-weight:700}
+.step-text a:hover{text-decoration:underline}
+.step-text code{
+  background:var(--surface2);padding:2px 6px;border-radius:5px;font-size:.78rem;
+  font-family:monospace;color:var(--purple);border:1px solid var(--border)
+}
+.step-text strong{color:var(--text)}
+
+/* Gemini free badge */
+.free-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--green-dim);border:1.5px solid #86EFAC;
+  border-radius:999px;padding:5px 14px;font-size:.82rem;font-weight:700;color:#15803D;
+  margin-bottom:1rem;
+}
+
+.modal-divider{border:none;border-top:1px solid var(--border);margin:.75rem 0}
+.modal label{font-size:.85rem;font-weight:700;color:var(--text);display:block;margin-bottom:.4rem}
+.modal input{
+  width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);
+  font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;margin-bottom:.75rem;
+  background:var(--bg);color:var(--text);
+}
+.modal input:focus{border-color:var(--blue)}
+.modal-btn{
+  width:100%;padding:12px;background:var(--blue);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-size:1rem;font-weight:700;
+  font-family:'Nunito',sans-serif;cursor:pointer;transition:all .2s;
+}
+.modal-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,.3)}
+.modal-skip{
+  width:100%;padding:8px;background:transparent;color:var(--text3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;
+  font-family:'Nunito',sans-serif;cursor:pointer;margin-top:8px;transition:all .2s;
+}
+.modal-skip:hover{background:var(--surface2);color:var(--text)}
+
+/* ── APP ── */
+#app{display:none;height:100vh;flex-direction:column}
+
+.topbar{
+  display:flex;align-items:center;padding:0 1rem;height:56px;
+  background:var(--surface);border-bottom:1px solid var(--border);gap:10px;flex-shrink:0
+}
+.topbar-logo{font-weight:800;font-size:1.1rem;color:var(--accent);margin-right:auto;display:flex;align-items:center;gap:6px}
+.level-badge{
+  padding:4px 12px;border-radius:999px;font-size:.78rem;font-weight:700;
+  background:var(--accent-dim);color:var(--accent);border:1px solid rgba(255,107,53,.2)
+}
+.top-btn{
+  padding:5px 12px;border:1px solid var(--border);border-radius:999px;
+  font-size:.78rem;color:var(--text2);background:transparent;cursor:pointer;
+  font-family:'Nunito',sans-serif;transition:all .15s
+}
+.top-btn:hover{background:var(--surface2);color:var(--text)}
+
+.progress-bar-wrap{height:4px;background:var(--border);flex-shrink:0}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease;width:0%}
+
+.chat-area{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.chat-area::-webkit-scrollbar{width:4px}
+.chat-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.msg-wrap{display:flex;flex-direction:column;gap:4px;animation:slideUp .25s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg-wrap.user{align-items:flex-end}
+.msg-wrap.ai{align-items:flex-start}
+
+.bubble{max-width:80%;padding:10px 14px;border-radius:18px;font-size:.92rem;line-height:1.6}
+.bubble.user{background:var(--accent);color:#fff;border-radius:18px 4px 18px 18px}
+.bubble.ai{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:4px 18px 18px 18px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.bubble.tamil-note{background:var(--purple-dim);border:1px solid rgba(139,92,246,.2);color:#5B21B6;border-radius:var(--radius-sm);font-size:.85rem;max-width:90%}
+.bubble.tip{background:var(--blue-dim);border:1px solid rgba(59,130,246,.2);color:#1D4ED8;border-radius:var(--radius-sm);font-size:.85rem;max-width:90%}
+.bubble.praise{background:var(--green-dim);border:1px solid rgba(34,197,94,.2);color:#15803D;border-radius:var(--radius-sm);font-size:.85rem;max-width:90%}
+
+.bubble-label{font-size:.72rem;color:var(--text3);padding:0 4px;font-weight:600}
+
+.listen-btn{
+  display:inline-flex;align-items:center;gap:4px;margin-top:5px;
+  padding:3px 10px;border-radius:999px;border:1px solid var(--border);
+  background:transparent;color:var(--text3);font-size:.72rem;cursor:pointer;
+  font-family:'Nunito',sans-serif;transition:all .15s
+}
+.listen-btn:hover{color:var(--accent);border-color:var(--accent)}
+.listen-btn.speaking{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+
+.typing-bubble{
+  padding:10px 16px;background:var(--surface);border:1px solid var(--border);
+  border-radius:4px 18px 18px 18px;display:inline-flex;gap:4px;align-items:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.06)
+}
+.typing-bubble span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:typingdot 1.2s infinite}
+.typing-bubble span:nth-child(2){animation-delay:.2s}
+.typing-bubble span:nth-child(3){animation-delay:.4s}
+@keyframes typingdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+.quick-replies{display:flex;flex-wrap:wrap;gap:6px;padding:0 1rem .5rem;flex-shrink:0}
+.qr-btn{
+  padding:6px 14px;border-radius:999px;border:1.5px solid var(--accent);
+  background:var(--accent-dim);color:var(--accent);font-size:.82rem;font-weight:600;
+  cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;white-space:nowrap
+}
+.qr-btn:hover{background:var(--accent);color:#fff}
+
+.input-area{padding:.75rem 1rem;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.voice-bar{
+  display:none;align-items:center;gap:8px;margin-bottom:8px;padding:6px 12px;
+  background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--radius-sm);
+  font-size:.8rem;color:#DC2626
+}
+.voice-bar .vdot{width:6px;height:6px;border-radius:50%;background:#EF4444;animation:pulse 1s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-box{
+  flex:1;display:flex;align-items:flex-end;gap:8px;
+  background:var(--bg);border:2px solid var(--border);border-radius:var(--radius);
+  padding:8px 12px;transition:border-color .2s
+}
+.input-box:focus-within{border-color:var(--accent)}
+.input-box textarea{
+  flex:1;border:none;outline:none;background:transparent;
+  font-family:'Nunito',sans-serif;font-size:.92rem;color:var(--text);
+  resize:none;min-height:22px;max-height:100px;line-height:1.5
+}
+.input-box textarea::placeholder{color:var(--text3)}
+.mic-btn{
+  width:34px;height:34px;border-radius:50%;border:none;background:transparent;
+  color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s
+}
+.mic-btn:hover{color:var(--accent)}
+.mic-btn.on{color:#EF4444;animation:micpulse 1.2s infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
+.send-btn{
+  width:42px;height:42px;border-radius:50%;border:none;background:var(--accent);
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s
+}
+.send-btn:hover{transform:scale(1.07)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.input-hint{font-size:.72rem;color:var(--text3);text-align:center;margin-top:5px}
+
+.bottom-nav{display:flex;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.nav-tab{
+  flex:1;padding:10px 4px;border:none;background:transparent;cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:600;color:var(--text3);
+  display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s
+}
+.nav-tab .tab-icon{font-size:1.2rem}
+.nav-tab.active{color:var(--accent)}
+.nav-tab:hover{color:var(--accent)}
+
+#lessonPanel{display:none;flex:1;overflow-y:auto;padding:1rem;flex-direction:column;gap:10px}
+.lesson-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;cursor:pointer;transition:all .2s}
+.lesson-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow)}
+.lesson-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.lesson-icon{font-size:1.4rem}
+.lesson-title{font-weight:700;font-size:.95rem}
+.lesson-sub{font-size:.8rem;color:var(--text2)}
+.lesson-badge{margin-left:auto;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700}
+.lesson-badge.easy{background:var(--green-dim);color:#15803D}
+.lesson-badge.medium{background:var(--blue-dim);color:#1D4ED8}
+.lesson-badge.hard{background:var(--purple-dim);color:#5B21B6}
+
+#vocabPanel{display:none;flex:1;overflow-y:auto;padding:1rem;flex-direction:column;gap:8px}
+.vocab-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:12px}
+.vocab-en{font-weight:700;font-size:.95rem;min-width:100px}
+.vocab-ta{font-family:'Noto Sans Tamil',sans-serif;color:var(--text2);font-size:.9rem}
+.vocab-ex{font-size:.8rem;color:var(--text3);font-style:italic;flex:1}
+.vocab-speak{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vocab-speak:hover{background:var(--accent-dim);border-color:var(--accent)}
+
+@media(max-width:480px){.bubble{max-width:92%}}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <div class="land-emoji">📚</div>
+  <h1 class="land-title">உங்கள் English<br><span>Teacher</span> இங்கே!</h1>
+  <p class="land-tamil">தமிழில் கேளுங்கள், English-ல் பேசுங்கள்</p>
+  <p class="land-sub">A friendly AI teacher who understands Tamil and teaches English — from zero to fluent, step by step! 🌟</p>
+
+  <div class="level-cards">
+    <div class="level-card selected" data-level="beginner" onclick="selectLevel(this)">
+      <div class="level-icon">🌱</div>
+      <div class="level-name">Beginner</div>
+      <div class="level-desc">ஆரம்பம் / A to Z</div>
+    </div>
+    <div class="level-card" data-level="elementary" onclick="selectLevel(this)">
+      <div class="level-icon">📖</div>
+      <div class="level-name">Elementary</div>
+      <div class="level-desc">எளிய வாக்கியம்</div>
+    </div>
+    <div class="level-card" data-level="intermediate" onclick="selectLevel(this)">
+      <div class="level-icon">💬</div>
+      <div class="level-name">Intermediate</div>
+      <div class="level-desc">Daily conversation</div>
+    </div>
+    <div class="level-card" data-level="advanced" onclick="selectLevel(this)">
+      <div class="level-icon">🚀</div>
+      <div class="level-name">Advanced</div>
+      <div class="level-desc">Fluent & confident</div>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <button class="cta-btn" onclick="startApp()">Start Learning! 🎉</button>
+    <span class="api-note">Uses Google Gemini · <a href="https://aistudio.google.com/apikey" target="_blank">Get free API key →</a></span>
+  </div>
+</div>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="apiModal" style="display:none">
+  <div class="modal">
+    <h3>🔑 Gemini API Key Setup</h3>
+
+    <div class="free-badge">✅ 100% Free — No billing required!</div>
+
+    <p>Follow these steps to get your free Google Gemini API key:</p>
+
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-text">Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> and sign in with your Google account.</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-text">Click <strong>"Create API Key"</strong> → Select or create a project → Click <strong>"Create API key in existing project"</strong>.</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-text">Copy the key (looks like <code>AIzaSy...</code>). It's <strong>free</strong> with generous daily limits — no credit card needed!</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-text">Paste it below and click <strong>Let's Go! 🚀</strong></div>
+      </div>
+    </div>
+
+    <hr class="modal-divider">
+    <label for="apiKeyInput">Your Gemini API Key:</label>
+    <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+    <button class="modal-btn" onclick="saveKey()">Let's Go! 🚀</button>
+    <button class="modal-skip" onclick="closeModal()">Already saved — skip</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">📚 Kalvi AI</div>
+    <span class="level-badge" id="levelBadge">🌱 Beginner</span>
+    <button class="top-btn" onclick="changeLevel()">Change Level</button>
+    <button class="top-btn" onclick="changeApiKey()">Key</button>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+  <!-- CHAT TAB -->
+  <div id="chatTab" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <div class="chat-area" id="messages"></div>
+    <div class="quick-replies" id="quickReplies"></div>
+    <div class="input-area">
+      <div class="voice-bar" id="voiceBar">
+        <div class="vdot"></div>
+        <span>கேட்கிறேன்... பேசுங்கள்!</span>
+        <span style="flex:1;color:#78716C;font-style:italic" id="interimText"></span>
+      </div>
+      <div class="input-row">
+        <div class="input-box">
+          <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="பேசுங்கள்">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+          <textarea id="userInput" placeholder="தமிழில் அல்லது English-ல் கேளுங்கள்..." rows="1" oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">🎤 Click mic to speak · Enter to send</div>
+    </div>
+  </div>
+
+  <!-- LESSONS TAB -->
+  <div id="lessonPanel"></div>
+
+  <!-- VOCAB TAB -->
+  <div id="vocabPanel"></div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-tab active" id="tab-chat" onclick="switchTab('chat')">
+      <span class="tab-icon">💬</span>Chat
+    </button>
+    <button class="nav-tab" id="tab-lesson" onclick="switchTab('lesson')">
+      <span class="tab-icon">📖</span>Lessons
+    </button>
+    <button class="nav-tab" id="tab-vocab" onclick="switchTab('vocab')">
+      <span class="tab-icon">📝</span>Vocab
+    </button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let apiKey = localStorage.getItem("kalvi_gemini_key") || "";
+let level = localStorage.getItem("kalvi_level") || "beginner";
+let history = []; // stores {role, parts} in Gemini format
+let xp = parseInt(localStorage.getItem("kalvi_xp") || "0");
+let recognition = null;
+let isListening = false;
+
+// ── GEMINI CONFIG ──
+// Using gemini-2.0-flash — fast, free, and capable
+const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_URL = () =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+// ── LEVEL CONFIG ──
+const LEVELS = {
+  beginner:     { icon:"🌱", name:"Beginner",     tamil:"ஆரம்பம்" },
+  elementary:   { icon:"📖", name:"Elementary",   tamil:"எளிய நிலை" },
+  intermediate: { icon:"💬", name:"Intermediate", tamil:"நடுத்தர நிலை" },
+  advanced:     { icon:"🚀", name:"Advanced",     tamil:"மேம்பட்ட நிலை" }
+};
+
+const SYSTEM_PROMPTS = {
+  beginner: `You are Kalvi, a warm and friendly English teacher for Tamil-speaking beginners.
+Rules:
+1. VERY short replies — max 3 sentences in the CONVERSATION part.
+2. You understand Tamil. If the user writes in Tamil, respond with a Tamil explanation AND English teaching.
+3. Format your reply EXACTLY like this (always include all tags):
+
+[CHAT]
+Your short friendly reply here. Ask one question to keep going.
+
+[TAMIL]
+தமிழில் ஒரு சிறிய குறிப்பு (only if helpful — skip line content but keep the tag)
+
+[TIP]
+💡 One simple grammar or vocabulary tip — one line only
+
+[PRAISE]
+One short encouraging sentence only if user did something well (else leave blank after tag)
+
+[QUICK]
+3 short reply options separated by | that the user can click
+
+Rules: Be fun, patient, friendly. No long paragraphs. Teach one thing at a time. Celebrate small wins.`,
+
+  elementary: `You are Kalvi, a friendly English teacher for Tamil speakers at elementary level.
+1. Short replies — max 4 sentences in CHAT.
+2. Understand Tamil, explain in Tamil when needed, but encourage English.
+3. Format EXACTLY:
+
+[CHAT]
+Your reply. Gently correct mistakes. Ask a follow-up question.
+
+[TAMIL]
+தமிழில் விளக்கம் (only when really needed)
+
+[TIP]
+💡 Grammar or phrase tip — one line
+
+[PRAISE]
+Short praise only if they did well
+
+[QUICK]
+3 reply options separated by |`,
+
+  intermediate: `You are Kalvi, an English conversation coach for intermediate Tamil speakers.
+1. Conversational replies — 2-4 sentences max.
+2. Gently correct grammar in TIP. Teach natural phrases.
+3. Format EXACTLY:
+
+[CHAT]
+Natural reply. Keep dialogue flowing.
+
+[TAMIL]
+(only for difficult concepts — usually skip)
+
+[TIP]
+💡 Better phrasing or grammar correction
+
+[PRAISE]
+(only when deserved)
+
+[QUICK]
+3 conversation continuers separated by |`,
+
+  advanced: `You are Kalvi, an advanced English fluency coach for Tamil speakers.
+1. Natural replies — 2-4 sentences.
+2. Focus on advanced vocabulary, idioms, formal/informal register.
+3. Format EXACTLY:
+
+[CHAT]
+Natural sophisticated reply. Challenge them slightly.
+
+[TAMIL]
+(rarely — only for cultural nuance)
+
+[TIP]
+💡 Advanced tip: idiom, nuance, or style improvement
+
+[PRAISE]
+(only when they use something impressive)
+
+[QUICK]
+3 advanced conversation options separated by |`
+};
+
+const LESSONS = {
+  beginner:[
+    {icon:"👋",title:"Greetings",sub:"வணக்கம் / Hello",tag:"easy",msg:"Teach me basic greetings in English"},
+    {icon:"🔤",title:"Alphabet & Sounds",sub:"எழுத்துக்கள்",tag:"easy",msg:"Teach me the English alphabet sounds"},
+    {icon:"🔢",title:"Numbers 1-20",sub:"எண்கள்",tag:"easy",msg:"Teach me numbers 1 to 20 in English"},
+    {icon:"🎨",title:"Colors",sub:"நிறங்கள்",tag:"easy",msg:"Teach me color names in English"},
+    {icon:"👨‍👩‍👧",title:"Family Words",sub:"குடும்ப வார்த்தைகள்",tag:"easy",msg:"Teach me family member names in English"},
+    {icon:"🍎",title:"Food & Drinks",sub:"உணவு வார்த்தைகள்",tag:"medium",msg:"Teach me common food words in English"},
+  ],
+  elementary:[
+    {icon:"🗣",title:"Introducing Yourself",sub:"உங்களை அறிமுகப்படுத்துங்கள்",tag:"easy",msg:"How do I introduce myself in English?"},
+    {icon:"🕐",title:"Telling Time",sub:"நேரம் சொல்வது",tag:"easy",msg:"Teach me how to tell time in English"},
+    {icon:"🛒",title:"Shopping English",sub:"கடையில் பேசுவது",tag:"medium",msg:"Teach me phrases for shopping in English"},
+    {icon:"🚌",title:"Directions",sub:"வழி கேட்பது",tag:"medium",msg:"Teach me how to ask for directions in English"},
+    {icon:"💼",title:"Job Interview",sub:"வேலை நேர்காணல்",tag:"medium",msg:"Teach me basic job interview phrases"},
+    {icon:"📞",title:"Phone Calls",sub:"தொலைபேசியில் பேசுவது",tag:"medium",msg:"Teach me how to speak on the phone in English"},
+  ],
+  intermediate:[
+    {icon:"💬",title:"Small Talk",sub:"அன்றாட உரையாடல்",tag:"easy",msg:"Teach me how to make small talk in English"},
+    {icon:"😊",title:"Expressing Feelings",sub:"உணர்வுகள் சொல்வது",tag:"medium",msg:"How do I express emotions naturally in English?"},
+    {icon:"📧",title:"Writing Emails",sub:"மின்னஞ்சல் எழுதுவது",tag:"medium",msg:"Teach me how to write professional emails"},
+    {icon:"🗺",title:"Travel English",sub:"பயணத்தில் பேசுவது",tag:"medium",msg:"Teach me travel conversation in English"},
+    {icon:"📰",title:"Reading News",sub:"செய்தி புரிந்துகொள்வது",tag:"hard",msg:"Help me understand news English better"},
+    {icon:"🎭",title:"Idioms & Phrases",sub:"சொல்லாடல்கள்",tag:"hard",msg:"Teach me common English idioms"},
+  ],
+  advanced:[
+    {icon:"🎤",title:"Public Speaking",sub:"பொது உரை",tag:"medium",msg:"Help me improve my public speaking in English"},
+    {icon:"💡",title:"Debate Skills",sub:"விவாத திறன்",tag:"hard",msg:"Teach me how to debate in English"},
+    {icon:"📝",title:"Essay Writing",sub:"கட்டுரை எழுதுவது",tag:"hard",msg:"Help me write better essays in English"},
+    {icon:"🤝",title:"Negotiation",sub:"பேரம் பேசுவது",tag:"hard",msg:"Teach me negotiation phrases in English"},
+    {icon:"📊",title:"Presentations",sub:"விளக்கக்காட்சி",tag:"hard",msg:"Teach me how to give presentations in English"},
+    {icon:"🌍",title:"Accents & Fluency",sub:"உச்சரிப்பு மேம்படுத்துவது",tag:"hard",msg:"Help me improve my English accent and fluency"},
+  ]
+};
+
+const VOCAB = {
+  beginner:[
+    {en:"Hello",ta:"வணக்கம்",ex:"Hello! How are you?"},
+    {en:"Thank you",ta:"நன்றி",ex:"Thank you very much!"},
+    {en:"Sorry",ta:"மன்னிக்கவும்",ex:"I'm sorry, I don't understand."},
+    {en:"Please",ta:"தயவுசெய்து",ex:"Please help me."},
+    {en:"Yes / No",ta:"ஆம் / இல்லை",ex:"Yes, I understand. No, I don't."},
+    {en:"Good morning",ta:"காலை வணக்கம்",ex:"Good morning! Have a nice day."},
+    {en:"My name is",ta:"என் பெயர்",ex:"My name is Kumar."},
+    {en:"Water",ta:"தண்ணீர்",ex:"Can I have some water, please?"},
+  ],
+  elementary:[
+    {en:"I need help",ta:"எனக்கு உதவி வேண்டும்",ex:"I need help with this."},
+    {en:"How much?",ta:"எவ்வளவு?",ex:"How much does this cost?"},
+    {en:"Where is...?",ta:"எங்கே...?",ex:"Where is the bus stop?"},
+    {en:"I don't understand",ta:"புரியவில்லை",ex:"Sorry, I don't understand."},
+    {en:"Can you repeat?",ta:"மீண்டும் சொல்லுங்கள்",ex:"Can you repeat that, please?"},
+    {en:"Turn left/right",ta:"இடது/வலது திரும்பவும்",ex:"Turn left at the signal."},
+  ],
+  intermediate:[
+    {en:"By the way",ta:"மேலும் சொல்லப்போனால்",ex:"By the way, did you see the news?"},
+    {en:"Actually",ta:"உண்மையில்",ex:"Actually, I disagree with that."},
+    {en:"I was wondering",ta:"நான் நினைத்துக்கொண்டிருந்தேன்",ex:"I was wondering if you could help."},
+    {en:"That makes sense",ta:"அது சரியாக உள்ளது",ex:"Oh, that makes sense now!"},
+    {en:"Let me think",ta:"யோசிக்கட்டும்",ex:"Let me think about that for a moment."},
+    {en:"Honestly",ta:"நேர்மையாக சொல்லப்போனால்",ex:"Honestly, I'm not sure."},
+  ],
+  advanced:[
+    {en:"Nevertheless",ta:"என்றாலும் கூட",ex:"Nevertheless, we must continue."},
+    {en:"To be fair",ta:"நியாயமாக சொல்வதென்றால்",ex:"To be fair, both sides have a point."},
+    {en:"Bear in mind",ta:"மனதில் வையுங்கள்",ex:"Bear in mind the deadline is Friday."},
+    {en:"Compelling",ta:"சக்திவாய்ந்த",ex:"That's a compelling argument."},
+    {en:"Nuance",ta:"நுட்பமான வித்தியாசம்",ex:"There's a nuance you're missing here."},
+    {en:"Articulate",ta:"தெளிவாக பேசுவது",ex:"She articulated her point very well."},
+  ]
+};
+
+// ── LANDING ──
+function selectLevel(el) {
+  document.querySelectorAll(".level-card").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  level = el.dataset.level;
+}
+
+function startApp() {
+  if (!apiKey) { document.getElementById("apiModal").style.display = "flex"; return; }
+  launchApp();
+}
+
+function saveKey() {
+  const k = document.getElementById("apiKeyInput").value.trim();
+  if (!k) return alert("Please enter your Gemini API key.");
+  apiKey = k;
+  localStorage.setItem("kalvi_gemini_key", k);
+  document.getElementById("apiModal").style.display = "none";
+  launchApp();
+}
+
+function closeModal() {
+  if (!apiKey) { alert("No saved key found. Please enter your Gemini API key."); return; }
+  document.getElementById("apiModal").style.display = "none";
+  launchApp();
+}
+
+function changeApiKey() {
+  document.getElementById("apiKeyInput").value = apiKey;
+  document.getElementById("apiModal").style.display = "flex";
+}
+
+function changeLevel() {
+  document.getElementById("app").style.display = "none";
+  document.getElementById("landing").style.display = "flex";
+}
+
+function launchApp() {
+  localStorage.setItem("kalvi_level", level);
+  const lv = LEVELS[level];
+  document.getElementById("landing").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+  document.getElementById("levelBadge").textContent = lv.icon + " " + lv.name;
+  history = [];
+  document.getElementById("messages").innerHTML = "";
+  renderLessons(); renderVocab(); updateProgress();
+  initRecognition();
+  const welcomes = {
+    beginner:     "வணக்கம்! 👋 I'm Kalvi, your English teacher!\n\nநாம் ஆரம்பத்திலிருந்து கற்போம்! (We'll learn from the beginning!)\n\nWhat's your name? 😊",
+    elementary:   "Hello! 👋 I'm Kalvi!\n\nNow we'll learn simple English sentences together.\n\nஉங்கள் பெயர் என்ன? (What is your name?) Tell me in English! 😄",
+    intermediate: "Hey there! 👋 I'm Kalvi, your conversation coach!\n\nLet's work on your fluency and natural English. How are you feeling about your English today?",
+    advanced:     "Welcome! 👋 I'm Kalvi.\n\nLet's take your English to the next level — fluency, precision, and confidence. What would you like to work on first?"
+  };
+  addMsg("ai", welcomes[level]);
+  setQuickReplies(["My name is...", "I want to learn English", "What should I study?"]);
+}
+
+// ── CHAT ──
+function addMsg(role, text, plain) {
+  const msgs = document.getElementById("messages");
+  const wrap = document.createElement("div");
+  wrap.className = "msg-wrap " + (role === "user" ? "user" : "ai");
+  if (role === "user") {
+    wrap.innerHTML = `<div class="bubble-label">You</div><div class="bubble user">${text.replace(/\n/g,"<br>")}</div>`;
+  } else {
+    const speakText = plain || text.replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+    wrap.innerHTML = `<div class="bubble-label">Kalvi 📚</div><div class="bubble ai">${text.replace(/\n/g,"<br>")}</div>
+      <button class="listen-btn" onclick="toggleSpeak(this,'${encodeURIComponent(speakText)}')">🔊 Listen</button>`;
+  }
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addSpecialBubble(type, text) {
+  if (!text || !text.trim()) return;
+  const msgs = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "msg-wrap ai";
+  div.innerHTML = `<div class="bubble ${type}">${text.replace(/\n/g,"<br>")}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById("messages");
+  const el = document.createElement("div");
+  el.className = "msg-wrap ai"; el.id = "typing";
+  el.innerHTML = `<div class="bubble-label">Kalvi 📚</div><div class="typing-bubble"><span></span><span></span><span></span></div>`;
+  msgs.appendChild(el); msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { document.getElementById("typing")?.remove(); }
+
+function setQuickReplies(opts) {
+  const qr = document.getElementById("quickReplies");
+  qr.innerHTML = opts.filter(Boolean).map(o =>
+    `<button class="qr-btn" onclick="useQuick('${o.replace(/'/g,"\\'")}'">${o}</button>`
+  ).join("");
+}
+
+function useQuick(text) {
+  document.getElementById("userInput").value = text;
+  sendMsg();
+}
+
+function autoResize(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; }
+
+// ── GEMINI API CALL ──
+async function sendMsg() {
+  const inp = document.getElementById("userInput");
+  const btn = document.getElementById("sendBtn");
+  const text = inp.value.trim();
+  if (!text || btn.disabled) return;
+  if (!apiKey) { changeApiKey(); return; }
+
+  addMsg("user", text);
+  // Add to Gemini conversation history (role: "user" / "model")
+  history.push({ role: "user", parts: [{ text }] });
+  inp.value = ""; inp.style.height = "auto";
+  btn.disabled = true;
+  document.getElementById("quickReplies").innerHTML = "";
+  showTyping();
+
+  try {
+    // Build Gemini request body
+    const body = {
+      system_instruction: {
+        parts: [{ text: SYSTEM_PROMPTS[level] }]
+      },
+      contents: history.slice(-12),  // keep last 12 turns (6 exchanges)
+      generationConfig: {
+        maxOutputTokens: 600,
+        temperature: 0.8
+      }
+    };
+
+    const res = await fetch(GEMINI_URL(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    // Check for API errors
+    if (data.error) throw new Error(data.error.message);
+
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!raw) throw new Error("Empty response from Gemini. Try again.");
+
+    // Add assistant reply to history
+    history.push({ role: "model", parts: [{ text: raw }] });
+
+    // Parse tagged sections
+    const get = (tag) => {
+      const m = raw.match(new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[|$)`));
+      return m ? m[1].trim() : "";
+    };
+    const chat   = get("CHAT");
+    const tamil  = get("TAMIL");
+    const tip    = get("TIP");
+    const praise = get("PRAISE");
+    const quick  = get("QUICK");
+
+    removeTyping();
+
+    // Show parsed sections as separate bubbles
+    if (chat)   addMsg("ai", chat, chat);
+    else        addMsg("ai", raw); // fallback if format not followed
+    if (tamil)  addSpecialBubble("tamil-note", "🇮🇳 " + tamil);
+    if (tip)    addSpecialBubble("tip", tip);
+    if (praise) addSpecialBubble("praise", "⭐ " + praise);
+
+    const quickOpts = quick ? quick.split("|").map(s => s.trim()).filter(Boolean).slice(0,3) : [];
+    setQuickReplies(quickOpts);
+
+    xp += 10; localStorage.setItem("kalvi_xp", xp);
+    updateProgress();
+    if (chat) speak(chat);
+
+  } catch(e) {
+    removeTyping();
+    let errMsg = e.message || "Something went wrong.";
+    // Friendly error hints
+    if (errMsg.includes("API_KEY_INVALID") || errMsg.includes("API key")) {
+      errMsg = "❌ Invalid API key. Please check your Gemini API key and try again.";
+    } else if (errMsg.includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED")) {
+      errMsg = "⏳ Daily free quota reached. Try again tomorrow, or check your usage at aistudio.google.com.";
+    }
+    addMsg("ai", "⚠️ Error: " + errMsg);
+  }
+  btn.disabled = false;
+}
+
+document.getElementById("userInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+// ── PROGRESS ──
+function updateProgress() {
+  const pct = Math.min((xp % 200) / 200 * 100, 100);
+  document.getElementById("progressBar").style.width = pct + "%";
+}
+
+// ── TAB SWITCH ──
+function switchTab(tab) {
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("tab-"+tab).classList.add("active");
+  document.getElementById("chatTab").style.display    = tab === "chat"   ? "flex" : "none";
+  document.getElementById("lessonPanel").style.display = tab === "lesson" ? "flex" : "none";
+  document.getElementById("vocabPanel").style.display  = tab === "vocab"  ? "flex" : "none";
+}
+
+// ── LESSONS ──
+function renderLessons() {
+  const panel = document.getElementById("lessonPanel");
+  const list = LESSONS[level] || [];
+  panel.innerHTML = `<div style="font-weight:800;font-size:1rem;padding:.5rem 0;color:var(--text)">📖 ${LEVELS[level].name} Lessons</div>` +
+    list.map(l => `<div class="lesson-card" onclick="startLesson('${l.msg}')">
+      <div class="lesson-top">
+        <span class="lesson-icon">${l.icon}</span>
+        <div><div class="lesson-title">${l.title}</div><div class="lesson-sub">${l.sub}</div></div>
+        <span class="lesson-badge ${l.tag}">${l.tag}</span>
+      </div>
+    </div>`).join("");
+}
+
+function startLesson(msg) {
+  switchTab("chat");
+  document.getElementById("userInput").value = msg;
+  sendMsg();
+}
+
+// ── VOCAB ──
+function renderVocab() {
+  const panel = document.getElementById("vocabPanel");
+  const list = VOCAB[level] || [];
+  panel.innerHTML = `<div style="font-weight:800;font-size:1rem;padding:.5rem 0;color:var(--text)">📝 ${LEVELS[level].name} Vocabulary</div>` +
+    list.map(v => `<div class="vocab-card">
+      <div><div class="vocab-en">${v.en}</div><div class="vocab-ta">${v.ta}</div></div>
+      <div class="vocab-ex">${v.ex}</div>
+      <button class="vocab-speak" onclick="speak('${v.en}')" title="Listen">🔊</button>
+    </div>`).join("");
+}
+
+// ── SPEECH RECOGNITION ──
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  recognition = new SR();
+  recognition.lang = "en-US";
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById("micBtn").classList.add("on");
+    document.getElementById("voiceBar").style.display = "flex";
+  };
+  recognition.onresult = e => {
+    let interim = "", final = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t; else interim += t;
+    }
+    document.getElementById("interimText").textContent = interim || final;
+    if (final) {
+      const inp = document.getElementById("userInput");
+      inp.value = (inp.value + " " + final).trim();
+      autoResize(inp);
+    }
+  };
+  recognition.onend = () => {
+    isListening = false;
+    document.getElementById("micBtn").classList.remove("on");
+    document.getElementById("voiceBar").style.display = "none";
+    document.getElementById("interimText").textContent = "";
+    const v = document.getElementById("userInput").value.trim();
+    if (v) sendMsg();
+  };
+  recognition.onerror = () => {
+    isListening = false;
+    document.getElementById("micBtn").classList.remove("on");
+    document.getElementById("voiceBar").style.display = "none";
+  };
+}
+
+function toggleMic() {
+  if (!recognition) {
+    initRecognition();
+    if (!recognition) { alert("Mic not supported. Please use Chrome."); return; }
+  }
+  if (isListening) { recognition.stop(); }
+  else { stopSpeaking(); document.getElementById("userInput").value = ""; try { recognition.start(); } catch(e){} }
+}
+
+// ── TEXT TO SPEECH ──
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  stopSpeaking();
+  const utt = new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim());
+  utt.lang = "en-US"; utt.rate = 0.9; utt.pitch = 1.05;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(v => v.lang === "en-US" && v.name.includes("Google"))
+         || voices.find(v => v.lang === "en-US")
+         || voices.find(v => v.lang.startsWith("en"));
+  if (v) utt.voice = v;
+  speechSynthesis.speak(utt);
+}
+
+function stopSpeaking() {
+  window.speechSynthesis?.cancel();
+  document.querySelectorAll(".listen-btn.speaking").forEach(b => {
+    b.classList.remove("speaking"); b.textContent = "🔊 Listen";
+  });
+}
+
+function toggleSpeak(btn, encoded) {
+  const text = decodeURIComponent(encoded);
+  if (btn.classList.contains("speaking")) { stopSpeaking(); return; }
+  stopSpeaking();
+  btn.classList.add("speaking"); btn.textContent = "⏹ Stop";
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = "en-US"; utt.rate = 0.9; utt.pitch = 1.05;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(v => v.lang === "en-US" && v.name.includes("Google"))
+         || voices.find(v => v.lang === "en-US");
+  if (v) utt.voice = v;
+  utt.onend = () => { btn.classList.remove("speaking"); btn.textContent = "🔊 Listen"; };
+  speechSynthesis.speak(utt);
+}
+
+window.speechSynthesis?.addEventListener("voiceschanged", () => {});
+updateProgress();
+</script>
+</body>
+</html>
